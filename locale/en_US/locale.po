@@ -32,6 +32,15 @@ msgstr "Unassigned"
 msgid "common.queue.long.active"
 msgstr "Active"
 
+msgid "doi.submit.noContext"
+msgstr "This submission's preprint server could not be found."
+
+msgid "doi.manager.settings.publications"
+msgstr "Preprints"
+
+msgid "doi.manager.settings.doiObjects"
+msgstr "Items with DOIs"
+
 msgid "section.section"
 msgstr "Section"
 

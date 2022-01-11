@@ -78,5 +78,18 @@ class PublishForm extends FormComponent
                 'description' => $msg,
                 'groupId' => 'default',
             ]));
+
+        if ($submissionContext->areDoisEnabled()) {
+            $this->addField(new FieldHTML('doi', [
+                'description' => $this->_getDoiMessage(),
+                'groupId' => 'default',
+            ]));
+        }
+    }
+
+    // TODO: #doi #current Add based on OJS implementation and pubId plugin
+    private function _getDoiMessage(): string
+    {
+        return '';
     }
 }

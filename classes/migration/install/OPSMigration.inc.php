@@ -73,6 +73,29 @@ class OPSMigration extends \PKP\migration\Migration
             $table->unique(['section_id', 'locale', 'setting_name'], 'section_settings_pkey');
         });
 
+        // DOIs
+        Schema::create('dois', function (Blueprint $table) {
+            $table->bigInteger('doi_id')->autoIncrement();
+            $table->bigInteger('context_id');
+            $table->string('doi');
+            $table->smallInteger('status')->default(1);
+
+            $table->foreign('context_id')->references('server_id')->on('servers');
+        });
+
+        // Settings
+        Schema::create('doi_settings', function (Blueprint $table) {
+            $table->bigInteger('doi_id');
+            $table->string('locale', 14)->default('');
+            $table->string('setting_name', 255);
+            $table->text('setting_value')->nullable();
+
+            // TODO: #doi Check on index/unique alongside foreign. Is it okay?
+            $table->index(['doi_id'], 'doi_settings_doi_id');
+            $table->unique(['doi_id', 'locale', 'setting_name'], 'doi_settings_pkey');
+            $table->foreign('doi_id')->references('doi_id')->on('dois');
+        });
+
         // Publications
         Schema::create('publications', function (Blueprint $table) {
             $table->bigInteger('publication_id')->autoIncrement();
@@ -88,6 +111,8 @@ class OPSMigration extends \PKP\migration\Migration
             $table->index(['submission_id'], 'publications_submission_id');
             $table->index(['section_id'], 'publications_section_id');
             $table->index(['url_path'], 'publications_url_path');
+            $table->bigInteger('doi_id')->nullable();
+            $table->foreign('doi_id')->references('doi_id')->on('dois')->nullOnDelete();
         });
 
         // Publication galleys
@@ -104,6 +129,8 @@ class OPSMigration extends \PKP\migration\Migration
             $table->index(['publication_id'], 'publication_galleys_publication_id');
             $table->index(['url_path'], 'publication_galleys_url_path');
             $table->foreign('submission_file_id')->references('submission_file_id')->on('submission_files');
+            $table->bigInteger('doi_id')->nullable();
+            $table->foreign('doi_id')->references('doi_id')->on('dois')->nullOnDelete();
         });
 
         // Galley metadata.
@@ -115,6 +142,8 @@ class OPSMigration extends \PKP\migration\Migration
             $table->index(['galley_id'], 'publication_galley_settings_galley_id');
             $table->unique(['galley_id', 'locale', 'setting_name'], 'publication_galley_settings_pkey');
         });
+
+
         // Add partial index (DBMS-specific)
         switch (DB::getDriverName()) {
             case 'mysql': DB::unprepared('CREATE INDEX publication_galley_settings_name_value ON publication_galley_settings (setting_name(50), setting_value(150))'); break;

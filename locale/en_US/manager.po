@@ -146,6 +146,13 @@ msgstr "Display on Homepage"
 msgid "manager.setup.numAnnouncementsHomepage.description"
 msgstr "How many announcements to display on the homepage. Leave this empty to display none."
 
+msgid "manager.setup.enableDois.description"
+msgstr "Assign Digital Object Identifiers (DOIs) to preprints and galleys."
+
+msgid "doi.manager.settings.doiObjectsRequired"
+msgstr "Select which items will be assigned a DOI. Most journals assign DOIs to articles, but you may wish to assign DOIs to all of the published items."
+
+
 msgid "manager.setup.enableUserRegistration"
 msgstr "Visitors can register a user account with the server."
 
