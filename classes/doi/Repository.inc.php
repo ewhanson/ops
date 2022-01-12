@@ -2,11 +2,14 @@
 
 namespace APP\doi;
 
+use APP\core\Application;
 use APP\core\Request;
+use APP\core\Services;
 use APP\facades\Repo;
 use APP\plugins\PubIdPlugin;
 use APP\preprint\PreprintGalley;
 use APP\publication\Publication;
+use APP\server\ServerDAO;
 use APP\submission\Submission;
 use PKP\context\Context;
 use PKP\core\DataObject;
@@ -28,7 +31,13 @@ class Repository extends \PKP\doi\Repository
      */
     public function mintPublicationDoi(Publication $publication, Submission $submission, Context $context): ?int
     {
-        // TODO: #doi Implement
+        if ($context->getData(Context::SETTING_USE_DEFAULT_DOI_SUFFIX)) {
+            $doiSuffix = $this->generateDefaultSuffix($context->getId());
+        } else {
+            $doiSuffix = $this->generateSuffixPattern($publication, $context, $context->getData(Context::SETTING_CUSTOM_DOI_SUFFIX_TYPE), $submission);
+        }
+
+        return $this->mintAndStoreDoi($context, $doiSuffix);
     }
 
     /**
@@ -36,7 +45,13 @@ class Repository extends \PKP\doi\Repository
      */
     public function mintGalleyDoi(PreprintGalley $galley, Publication $publication, Submission $submission, Context $context): ?int
     {
-        // TODO: #doi Implement
+        if ($context->getData(Context::SETTING_USE_DEFAULT_DOI_SUFFIX)) {
+            $doiSuffix = $this->generateDefaultSuffix($context->getId());
+        } else {
+            $doiSuffix = $this->generateSuffixPattern($galley, $context, $context->getData(Context::SETTING_CUSTOM_DOI_SUFFIX_TYPE), $submission, $galley);
+        }
+
+        return $this->mintAndStoreDoi($context, $doiSuffix);
     }
 
     /**
@@ -87,7 +102,34 @@ class Repository extends \PKP\doi\Repository
      */
     public function getDoisForSubmission(int $submissionId): array
     {
-        // TODO: #doi Implement
+        $doiIds = [];
+
+        $submission = Repo::submission()->get($submissionId);
+        /** @var Publication[] $publications */
+        $publications = [$submission->getCurrentPublication()];
+
+        /** @var ServerDAO $contextDao */
+        $contextDao = Application::getContextDAO();
+        $context = $contextDao->getById($submission->getData('contextId'));
+
+        foreach ($publications as $publication) {
+            $publicationDoiId = $publication->getData('doiId');
+            if (!empty($publicationDoiId) && $context->isDoiTypeEnabled(self::TYPE_PUBLICATION)) {
+                $doiIds[] = $publicationDoiId;
+            }
+
+            // Galleys
+            /** @var PreprintGalley[] $galleys */
+            $galleys = Services::get('galley')->getMany(['publicationIds' => $publication->getId()]);
+            foreach ($galleys as $galley) {
+                $galleyDoiId = $galley->getData('doiId');
+                if (!empty($galleyDoiId) && $context->isDoiTypeEnabled(self::TYPE_REPRESENTATION)) {
+                    $doiIds[] = $galleyDoiId;
+                }
+            }
+        }
+
+        return $doiIds;
     }
 
     /**
