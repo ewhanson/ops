@@ -18,6 +18,7 @@
 namespace APP\doi;
 
 use APP\facades\Repo;
+use Doi;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

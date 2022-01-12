@@ -21,8 +21,8 @@ use APP\core\Application;
 use APP\i18n\AppLocale;
 use PKP\core\PKPString;
 use PKP\db\DAORegistry;
-use PKP\identity\Identity;
 use PKP\db\DAOResultFactory;
+use PKP\identity\Identity;
 
 use PKP\submission\PKPSubmission;
 
@@ -60,7 +60,7 @@ class DAO extends \PKP\author\DAO
 
         $supportedLocales = [];
         if ($serverId !== null) {
-            $serverDao = DAORegistry::getDAO('ServerDAO'); /** @var $serverDao \ServerDAO */
+            $serverDao = DAORegistry::getDAO('ServerDAO'); /** @var \ServerDAO $serverDao */
             $server = $serverDao->getById($serverId);
             $supportedLocales = $server->getSupportedLocales();
         } else {

@@ -15,7 +15,6 @@
 
 use APP\facades\Repo;
 use APP\template\TemplateManager;
-use APP\core\Services;
 use PKP\security\Role;
 
 import('lib.pkp.pages.submission.PKPSubmissionHandler');
