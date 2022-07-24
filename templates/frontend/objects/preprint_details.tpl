@@ -149,7 +149,12 @@
 			{/if}
 
 			{* DOI *}
-			{assign var=doiObject value=$currentPublication->getData('doiObject')}
+			{if $currentContext->getData('doiVersioning') == true}
+				{assign var=doiObject value=$publication->getData('doiObject')}
+			{else}
+				{assign var=doiObject value=$currentPublication->getData('doiObject')}
+			{/if}
+
 			{if $doiObject}
 				{assign var="doiUrl" value=$doiObject->getData('resolvingUrl')|escape}
 				<section class="item doi">

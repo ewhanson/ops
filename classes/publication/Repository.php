@@ -120,28 +120,19 @@ class Repository extends \PKP\publication\Repository
     {
         $newId = parent::version($publication);
 
+        $context = Application::get()->getRequest()->getContext();
+
         $galleys = $publication->getData('galleys');
+        $isDoiVersioningEnabled = $context->getData(Context::SETTING_DOI_VERSIONING);
         if (!empty($galleys)) {
             foreach ($galleys as $galley) {
                 $newGalley = clone $galley;
                 $newGalley->setData('id', null);
                 $newGalley->setData('publicationId', $newId);
+                if ($isDoiVersioningEnabled) {
+                    $newGalley->setData('doiId', null);
+                }
                 Repo::galley()->add($newGalley);
-            }
-        }
-
-        // Version DOI if the pattern includes the publication id
-        // FIXME: Move DOI versioning logic out of pubIdPlugin
-        $context = $this->request->getContext();
-        $pubIdPlugins = PluginRegistry::loadCategory('pubIds', true, $context->getId());
-        $doiPubIdPlugin = $pubIdPlugins['doipubidplugin'] ?? null;
-        if ($doiPubIdPlugin) {
-            $pattern = $doiPubIdPlugin->getSetting($context->getId(), 'doiPublicationSuffixPattern');
-            if (strpos($pattern, '%b')) {
-                $publication = $this->get($newId);
-                $this->edit($publication, [
-                    'pub-id::doi' => $doiPubIdPlugin->versionPubId($publication),
-                ]);
             }
         }
 
@@ -238,6 +229,37 @@ class Repository extends \PKP\publication\Repository
 
         // If the user is not an author, has to be an editor, return true
         return true;
+    }
+
+    /**
+     * Remove DOI IDs from a previous version of a publication.
+     * Used in publication versioning when not versioning DOIs.
+     *
+     * @param Publication $oldPublication Publication with DOIs to be removed
+     * @param Publication $newPublication Publication that should receive copied DOIs
+     */
+    public function clearOldDois(Context $context, Publication $oldPublication, Publication $newPublication): void
+    {
+        parent::clearOldDois($context, $oldPublication, $newPublication);
+
+        $oldGalleys = Repo::galley()->getCollector()
+            ->filterByPublicationIds(['publicationIds' => $oldPublication->getId()])
+            ->getMany();
+        $newGalleys = Repo::galley()->getCollector()
+            ->filterByPublicationIds(['publicationIds' => $newPublication->getId()])
+            ->getMany();
+
+        foreach ($oldGalleys as $oldGalley) {
+            $newGalley = $newGalleys->first(fn ($galley) => $galley->getData('doiId') === $oldGalley->getData('doiId'));
+            $doiId = $oldGalley->getData('doiId');
+
+            // Only remove old galley DOI reference if a corresponding new galley exists
+            if ($newGalley !== null && $doiId !== null) {
+                $oldGalley->setData('doiId', null);
+
+                Repo::galley()->dao->update($oldGalley);
+            }
+        }
     }
 
     /**
