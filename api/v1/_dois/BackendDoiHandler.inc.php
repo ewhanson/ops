@@ -54,10 +54,6 @@ class BackendDoiHandler extends PKPBackendDoiHandler
             return $response->withStatus(404)->withJsonError('api.404.resourceNotFound');
         }
 
-        if ($galley->getData('contextId') !== $context->getId()) {
-            return $response->withStatus(403)->withJsonError('api.dois.403.editItemOutOfContext');
-        }
-
         $params = $this->convertStringsToSchema(\PKP\services\PKPSchemaService::SCHEMA_GALLEY, $slimRequest->getParsedBody());
 
         $doi = Repo::doi()->get((int) $params['doiId']);

@@ -130,6 +130,43 @@ class Repository extends \PKP\doi\Repository
     }
 
     /**
+     * Retrieves an application specific pubObject based on the type as a string
+     *
+     * @param string $pubObjectType The object type name passed down from the front end. Will be application specific, e.g. 'article' or 'preprint' instead of 'publication'
+     *
+     * @return DataObject|null Will be one of the application specific pubObjects, e.g. Publication, ArticleGalley, etc.
+     */
+    public function getPubObjectFromType(string $pubObjectType, int $pubObjectId): ?DataObject
+    {
+        return match ($pubObjectType) {
+            'preprint' => Repo::publication()->get($pubObjectId),
+            'galley' => Repo::galley()->get($pubObjectId),
+            default => null,
+        };
+    }
+
+    /**
+     * Updates the DOI reference for an application-specific pubObject. Can be removed by setting doiId to null
+     *
+     * @param DataObject $pubObject Application-specific pubObject, e.g. Publication, ArticleGalley, etc.
+     * @param string $pubObjectType The object type name passed down from the front end. Will be application specific, e.g. 'article' or 'preprint' instead of 'publication'
+     * @param ?int $doiId Setting to null will remove doiId association
+     */
+    public function updatePubObjectDoiFromType(DataObject $pubObject, string $pubObjectType, ?int $doiId): void
+    {
+        $params = ['doiId' => $doiId];
+
+        switch ($pubObjectType) {
+            case 'preprint':
+                Repo::publication()->edit($pubObject, $params);
+                break;
+            case 'galley':
+                Repo::galley()->edit($pubObject, $params);
+                break;
+        }
+    }
+
+    /**
      *  Gets legacy, user-generated suffix pattern associated with object type and context
      *
      * @return mixed|null

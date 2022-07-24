@@ -132,21 +132,6 @@ class Repository extends \PKP\publication\Repository
             }
         }
 
-        // Version DOI if the pattern includes the publication id
-        // FIXME: Move DOI versioning logic out of pubIdPlugin
-        $context = $this->request->getContext();
-        $pubIdPlugins = PluginRegistry::loadCategory('pubIds', true, $context->getId());
-        $doiPubIdPlugin = $pubIdPlugins['doipubidplugin'] ?? null;
-        if ($doiPubIdPlugin) {
-            $pattern = $doiPubIdPlugin->getSetting($context->getId(), 'doiPublicationSuffixPattern');
-            if (strpos($pattern, '%b')) {
-                $publication = $this->get($newId);
-                $this->edit($publication, [
-                    'pub-id::doi' => $doiPubIdPlugin->versionPubId($publication),
-                ]);
-            }
-        }
-
         return $newId;
     }
 
